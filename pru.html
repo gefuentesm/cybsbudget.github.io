@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <script src="./src/casosUso.js"></script>
+    <script src="./src/controllers.js"></script>
+    <script src="./src/presenter.js"></script>
+    <script src="./src/microservicios.js"></script>
+    <script src="./src/entities.js"></script>
+    <link rel="stylesheet" href="resources/maincss.css"> </link>
+    <script>
+      var token;
+      var oBudget;
+      var render=new Render();
+      function bt_show(name){
+          var lista=document.getElementsByName(name)
+          console.log(lista)
+          lista.forEach((el)=>{
+
+              
+                if(el.style.display=="none")
+                    el.style.display="block";
+                else 
+                    el.style.display="none";
+          })
+      }
+      function allowDrop(ev) {
+        ev.preventDefault();
+      }
+
+      function drag(ev) {
+        ev.dataTransfer.effectAllowed = 'copy';
+        ev.dataTransfer.setData("text", ev.target.id);
+        console.log("drag",ev.target.id);
+      }
+
+      function drop(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        console.log("drop",data);
+        //ev.target.appendChild(document.getElementById(data));
+        //let idFase=document.getElementById()
+       
+        
+        //ev.target.appendChild(nodeCopy);
+        console.log(ev.target.id,oBudget.getFases());
+        if(ev.target.id=="f1")
+          for(let i=0;i<oBudget.getFases();i++){
+            let j=i+1;
+            var nodeCopy = document.getElementById(data).cloneNode(true);
+            nodeCopy.id = "f"+j+"-"+nodeCopy.id;
+            document.getElementById("f"+(i+1)).appendChild(nodeCopy);
+          }
+      }
+      function envio(ev){
+          ev.preventDefault();
+          var selects=document.querySelectorAll("form");
+            console.log(selects);
+            let arr=[]
+            selects.forEach((frm)=>{
+                var d=new FormData(frm);
+                var o=Object.fromEntries(d);
+                arr.push(o);
+            })
+            console.log(arr);
+      }
+    </script>
+    <title>Budget</title>
+  </head>
+  <body>
+
+
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <div id="banner" style="margin-left:206px">
+        <p>CYBS Budget</p>
+        <div id="signin" class="card" style="display:block">
+            <div id="f1" class="mes" ondrop="drop(event)" ondragover="allowDrop(event)">
+                Consultores
+                <div id="form-f1" >
+                <form id="f1-t-Alejandro Sanabria" name="people-container" draggable="true" class="card" ondragstart="drag(event)">
+                    <div>
+                        <input type="text" name="nombre" readonly="" class="name" value="Alejandro Sanabria"><button type="button" onclick="bt_show('data-Alejandro Sanabria')" name="f-Alejandro Sanabria" id="f-Alejandro Sanabria">v</button>
+                    </div>
+                    <div name="data-Alejandro Sanabria" style="display:none">
+                        <div>
+                            <img src="./public/img/home.svg" style="width:20px;height:20px"><input type="text" name="remote" id="remote-Alejandro Sanabria" style="width:30px" value="0"><img src="./public/img/avion.svg" style="width:20px;height:20px"><input type="text" name="onsite" id="onsite-Alejandro Sanabria" style="width:30px" value="0">
+                        </div>
+                        <div>
+                            <img src="./public/img/dolar.svg" style="width:20px;height:20px"><input type="text" name="fee" id="fee-Alejandro Sanabria" style="width:100px" value="0">
+                        </div>
+                    </div>
+                </form>
+                <form id="f1-t-Arleen Aponte" name="people-container" draggable="true" class="card" ondragstart="drag(event)">
+                    <div>
+                        <input type="text" name="nombre" readonly="" class="name" value="Arleen Aponte"><button type="button" onclick="bt_show('data-Arleen Aponte')" name="f-Arleen Aponte" id="f-Arleen Aponte">v</button>
+                    </div>
+                    <div name="data-Arleen Aponte" style="display:none">
+                        <div>
+                            <img src="./public/img/home.svg" style="width:20px;height:20px"><input type="text" name="remote" id="remote-Arleen Aponte" style="width:30px" value="0"><img src="./public/img/avion.svg" style="width:20px;height:20px"><input type="text" name="onsite" id="onsite-Arleen Aponte" style="width:30px" value="0">
+                        </div>
+                        <div>
+                            <img src="./public/img/dolar.svg" style="width:20px;height:20px"><input type="text" name="fee" id="fee-Arleen Aponte" style="width:100px" value="0">
+                        </div>
+                    </div>
+                </form>
+                <button onclick="envio(event)">envio</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div id="sidebar" class="sidebar">
+      <div id="team">
+
+      </div>
+    </div>
+    <div id="form-container" class="card" style="display:none;margin-left:206px">
+        <h2>DATOS DEL PRESUPUESTO</h2>
+        <div>
+          <input id="budgetId" type="text" placeholder="ID" ></input><button>Buscar</button>
+        </div>
+        <input id="budgetName" type="text" placeholder="Nombre del proyecto" style="width:280px;display:block"></input>
+        <input id="budgetFases" type="text" placeholder="Nro de Fases" style="display:block"></input>
+        <button onclick="budget('budgetId','budgetName','budgetFases','fases-container')" style="display:block">Crear Fases</button>
+        <img src="./public/img/schedule.svg" style="width:20px;height:20px">
+        <img src="./public/img/avion.svg" style="width:20px;height:20px">
+    </div>
+    <div id="fases-container" style="display:block;margin-left:206px">
+
+    </div>
+  </body>
+</html>

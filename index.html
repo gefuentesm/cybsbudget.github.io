@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <script src="./src/casosUso.js"></script>
+    <script src="./src/controllers.js"></script>
+    <script src="./src/presenter.js"></script>
+    <script src="./src/microservicios.js"></script>
+    <script src="./src/entities.js"></script>
+    <link rel="stylesheet" href="resources/maincss.css"> </link>
+    <script>
+      var token;
+      var oBudget;
+      var render=new Render();
+      function bt_show(name){
+          var lista=document.getElementsByName(name)
+          console.log(lista)
+          lista.forEach((el)=>{
+              if(el.style.display=="none")
+                el.style.display="block";
+               else 
+                el.style.display="none";
+          });
+      }
+      function setting(frmset){
+        let frms=document.getElementById(frmset);
+        let obj=Object.fromEntries(new FormData(frms));
+        console.log("setting",obj);
+      }
+      function envio(){     
+          const dd="totGlob-dedica";
+          const gg="totGlob-gastos";
+          const tt="totGlob-tot";
+          var selects=document.querySelectorAll("form");
+          let totfase;
+          let totspenses;
+          let gastos=0;
+          let totGastosProy=0;
+          let totDediProy=0;
+          let totDedExp=0;
+          let totTot=0;
+          //console.log("antes",oBudget.getFases());
+          for(let i=0;i<oBudget.getFases();i++){
+            let tot="total-df"+(i+1);
+            let trip="total-gf"+(i+1);
+            let tdg="total-tf"+(i+1);
+            console.log(tot,trip);
+            totfase=document.getElementById(tot);
+            totspenses=document.getElementById(trip);
+            totDedExp=document.getElementById(tdg);
+            console.log(i,totfase);
+            totspenses.value="0"
+            totfase.value="0";
+            totDedExp.value="0";
+            //console.log("despues",totfase);
+          }
+
+          //console.log(selects);
+          let arr=[];
+          let viajes=[];
+          let avisar=true;
+          selects.forEach((frm)=>{
+              var d=new FormData(frm);
+              //console.log("foreach selects",frm.id,frm.id.substring(0,1),frm.id.substring(0,frm.id.indexOf("-")));
+              var fase=frm.id.substring(0,frm.id.indexOf("-"));
+              var o=Object.fromEntries(d);
+              if((o.remote>0||o.onsite>0||o.fee>0)&&frm.id.substring(0,1)=="f"){
+                o.id=frm.id;
+                o.fase=frm.id.substring(0,frm.id.indexOf("-"))
+                let tot="total-d"+fase;
+                let trip="total-g"+fase;
+                let tdg="total-t"+fase;
+                totfase=document.getElementById(tot);
+                totspenses=document.getElementById(trip);
+                totDedExp=document.getElementById(tdg);
+                //console.log(tot,totfase,parseInt(o.fee)*(parseInt(o.remote)+parseInt(o.onsite)))
+                totfase.value=parseInt(o.fee)*(parseInt(o.remote)+parseInt(o.onsite))+parseInt(totfase.value);
+                totDediProy=parseInt(totDediProy)+parseInt(totfase.value);
+                totDedExp.value=parseInt(totfase.value);
+                arr.push(o);
+              }
+              if(o.onsite>0){
+                let key=fase+"-viaje-"+o.nombre;
+                console.log("viaje",frm.parentNode);
+                if(document.getElementById(key)==null){ 
+                  var div=document.createElement("FORM");
+                  div.innerHTML=render.send(o,"Viaje");
+                  div.className="card";
+                  div.id=fase+"-viaje-"+o.nombre;
+                  frm.parentNode.appendChild(div);
+                  if(avisar){
+                    alert("Complete los datos de viajes y haga click en GUARDAR FASES nuevamente");
+                    avisar=false;
+                  }
+                    
+                }
+              }
+              if(o.dias>0 && o.boletos>0 && o.hotel && o.gastos>0){
+                o.fase=fase;
+                o.id=frm.id;
+                let totalViaje=(parseInt(o.dias)*(parseInt(o.gastos)+parseInt(o.hotel)))+parseInt(o.boletos);                
+                gastos+=totalViaje;
+                console.log("gastoViajes",totalViaje,gastos);
+                totspenses.value=gastos;
+                totDedExp.value=parseInt(totDedExp.value)+totalViaje;
+                totGastosProy=parseInt(totGastosProy)+parseInt(gastos);
+                viajes.push(o);
+              }
+          })
+          if(totDediProy>0){
+            document.getElementById(dd).innerText=totDediProy;
+            totTot=totDediProy;
+          }            
+          if(totGastosProy>0){
+            document.getElementById(gg).textContent=totGastosProy
+            totTot+=totGastosProy;
+          }
+          document.getElementById(tt).textContent=totTot;  
+          console.log(arr,viajes);
+      }
+      function allowDrop(ev) {
+        ev.preventDefault();
+      }
+
+      function drag(ev) {
+        ev.dataTransfer.effectAllowed = 'copy';
+        ev.dataTransfer.setData("text", ev.target.id);
+        console.log("drag",ev.target.id);
+      }
+
+      function drop(ev) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        console.log("drop",data);
+        //ev.target.appendChild(document.getElementById(data));
+        //let idFase=document.getElementById()
+       
+        
+        //ev.target.appendChild(nodeCopy);
+        console.log(ev.target.id,oBudget.getFases());
+        if(ev.target.id=="f1")
+          for(let i=0;i<oBudget.getFases();i++){
+            let j=i+1;
+            var nodeCopy = document.getElementById(data).cloneNode(true);
+            nodeCopy.id = "f"+j+"-"+nodeCopy.id;
+            document.getElementById("f"+(i+1)).appendChild(nodeCopy);
+          }
+      }
+    </script>
+    <title>Budget</title>
+  </head>
+  <body>
+
+
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="banner" style="margin-left:206px">
+      <p><img src="public/img/cybs-logo-new.png" width="50px"  />&nbsp; Budget</p>
+      <div id="signin" class="card" style="display:block;width: 80%;">
+        <h2>LOGIN</h2>
+        <input type="text" id="username" style="width:280px;display:block" placeholder="usuario">
+        <input type="password" style="width:280px;display:block" placeholder="contraseña" id="password">
+        <button onclick="login('username','password','form-container')" style="display:block">Login</button>
+      </div>
+    </div>
+    <div id="sidebar" class="sidebar" style="display:none;width:180px">
+      <div id="team" style="width:170px">
+
+      </div>
+    </div>
+    <div id="form-container"  style="display:none;margin-left:206px;width: 80%;">
+        <div class="card" style="float: left;width:50%;height: 240px;">
+          <h2>DATOS DEL PRESUPUESTO</h2>
+          <label for="tipo-proy">Tipo de Proyecto:<select  name="tipo-proy">
+            <option value="NA" selected>N/A</option>
+            <option value="h" >Migración</option>
+            <option value="s">Optimización de canales</option>
+            <option value="s">Conversión</option>
+            <option value="s">Readiness</option>
+            <option value="s">Alternativas de Procesamiento</option>
+          </select>
+        </label>
+          <div>
+            <label for="budgetId">ID:</label><input id="budgetId" type="text" placeholder="ID" ></input><button onclick="loadBudgetByid('budgetId')">Buscar</button>
+          </div>
+          <label for="budgetName">Nombre:<input id="budgetName" type="text" placeholder="Nombre del proyecto" style="width:280px;display:block;width:550px"></input></label>
+          <label for="budgetFases">Fases:<input id="budgetFases" type="text" placeholder="Nro de Fases" style="display:block"></input></label>
+          <label for="budgetLimit">Límite</label><input id="budgetLimit" type="text" placeholder="Monto límite del proyecto, 0 si no hay límite" style="display:block"></input>
+          <label for="budgetUnidadDedicacion">Unidad de tiempo en las fases</label><select id="budgetUnidadDedicacion" name="select">
+            <option value="d" selected>días</option>
+            <option value="h" >Horas</option>
+            <option value="s">Semanas</option>
+          </select>
+          <div style="border: 1px solid silver;padding: 5px;background-color: lightgrey;width:90%">
+            <span>Total Dedicación</span>&nbsp;<span id="totGlob-dedica" style="color:green">0</span>&nbsp;<span>Total Gastos</span>&nbsp;<span style="color:green" id="totGlob-gastos">0</span>&nbsp;<span >Total del presupuesto</span>&nbsp;<span id="totGlob-tot" style="color:green">0</span>
+          </div>
+          <div>
+            <button onclick="budget('budgetId','budgetName','budgetFases','fases-container')" style="display:inline">Crear Fases</button>
+            <button style="display:inline" onclick="envio()">Procesar Fases</button>
+            <button style="display:inline" onclick="alert('No disponible')">Guardar</button>
+            <button style="display:inline" onclick="alert('No disponible')">Hojas de Resumen</button>
+          </div>
+        </div>
+        <div class="card" style="float:left;height: 240px;width:47%">
+          <form id="setForm">
+            <h2>DATOS DE CONFIGURACION</h2>
+            <div>  <input type="checkbox" name="inMontoGlobal" >El monto del proyecto está limitado por el monto global</input></div>
+            <div><input type="checkbox" name="inMontoFase">El monto del proyecto está limitado por el monto de las fases</input></div>
+            <div><input type="checkbox" name="inMinConsul">Los consultores tendrán un tiempo mínimo de participación en cada fase de</input>&nbsp;
+              <input type="text" name="min-consultor"></input>
+              <select  name="unidad">
+                <option value="d" selected>días</option>
+                <option value="h" >Horas</option>
+                <option value="s">Semanas</option>
+              </select>
+            </div>
+            <div><input type="checkbox" name="inLimPart" >El algoritmo disminuirá la participación de los especialistas hasta el límite de participación</input></div>
+            <div style="border:1px solid silver;width:90%;padding: 8px;">
+              <input type="radio" name="control">El límite se controla de forma manual</input><input type="radio" name="control">El límite se controla de forma automática</input>
+            </div><br/>
+            Validaciones:<br/>
+            <div style="border: 1px solid silver;padding: 5px;background-color: lightgrey;width:90%">
+              .
+            </div>
+            <a href="javascript:setting('setForm')">Guardar y Activar Setting</a>
+          </form>
+        </div>
+    </div>
+    <div id="fases-container" style="display:none;margin-left:206px;width: 79%;float:left">
+      <h2>DATOS DE LAS FASES DEL PROYECTO</h2>
+
+
+    </div>
+  </body>
+</html>
